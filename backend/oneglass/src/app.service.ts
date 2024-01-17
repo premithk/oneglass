@@ -7,7 +7,7 @@ export class AppService {
   constructor(private prisma: PrismaService) {}
 
   getForcastedSalesForNextTwoWeeks(location: string) {
-    const { endDate } = getNextTwoWeeksDates();
+    const { endDate, startDate } = getNextTwoWeeksDates();
     return this.prisma.forecasts.findMany({
       where: {
         location: {
@@ -15,8 +15,7 @@ export class AppService {
           mode: 'insensitive',
         },
         date: {
-          // looks like there is no data for the next two weeks, so I've hard coded the start date
-          gte: new Date('2023-01-23T18:37:12.047Z'),
+          gte: startDate,
           lt: endDate,
         },
       },
@@ -28,6 +27,22 @@ export class AppService {
       distinct: ['location'],
       select: {
         location: true,
+      },
+    });
+  }
+
+  getIncomingInventoryForNextTwoWeeks(location: string) {
+    const { endDate, startDate } = getNextTwoWeeksDates();
+    return this.prisma.incoming_inventory.findMany({
+      where: {
+        location: {
+          equals: location,
+          mode: 'insensitive',
+        },
+        date: {
+          gte: startDate,
+          lt: endDate,
+        },
       },
     });
   }

@@ -9,6 +9,13 @@ interface SalesData {
   id: number;
 }
 
+interface IncomingOrderData {
+  date: string;
+  location: string;
+  incoming_quantity: number;
+  id: number;
+}
+
 interface Location {
   location: string;
 }
@@ -22,6 +29,9 @@ interface WeatherData {
 
 export default function Home() {
   const [salesData, setSalesData] = useState<Array<SalesData>>([]);
+  const [incomingOrderData, setIncomingOrderData] = useState<
+    Array<IncomingOrderData>
+  >([]);
   const [weatherData, setWeatherData] = useState<Array<WeatherData>>([]);
 
   const [locations, setLocations] = useState<Location[]>([]);
@@ -36,9 +46,14 @@ export default function Home() {
 
   useEffect(() => {
     if (selectedLocation) {
-      fetch(`http://localhost:3000/${selectedLocation}/next-two-weeks`)
+      fetch(`http://localhost:3000/${selectedLocation}/next-two-weeks/forecast`)
         .then((response) => response.json())
         .then((data) => setSalesData(data))
+        .catch((error) => console.error("Error fetching sales data:", error));
+
+      fetch(`http://localhost:3000/${selectedLocation}/next-two-weeks/incoming`)
+        .then((response) => response.json())
+        .then((data) => setIncomingOrderData(data))
         .catch((error) => console.error("Error fetching sales data:", error));
 
       fetch(`http://localhost:3000/weather/${selectedLocation}`)
@@ -55,14 +70,10 @@ export default function Home() {
         ...weatherData.find(
           (w) => new Date(x.date).toISOString().split("T")[0] === w.datetime
         ),
+        ...incomingOrderData.find((i) => x.date === i.date),
       })),
-    [salesData, weatherData]
+    [salesData, weatherData, incomingOrderData]
   );
-
-  useEffect(() => {
-    console.log("Data", data);
-    console.log("Data", weatherData);
-  }, [data,weatherData]);
 
   const columns = useMemo(
     () => [
@@ -79,6 +90,11 @@ export default function Home() {
       {
         Header: "Forecasted Sales Quantity",
         accessor: "forecasted_sales_quantity" as keyof SalesData,
+        style: { textAlign: "left" },
+      },
+      {
+        Header: "Incoming Order Quantity",
+        accessor: "incoming_quantity" as keyof IncomingOrderData,
         style: { textAlign: "left" },
       },
       {
@@ -126,7 +142,17 @@ export default function Home() {
           {table.rows.map((row) => {
             table.prepareRow(row);
             return (
-              <tr key={row.getRowProps().key}>
+              <tr
+                key={row.getRowProps().key}
+                style={{
+                  backgroundColor:
+                    row.values["forecasted_sales_quantity"] -
+                      row.values["incoming_quantity"] <
+                    100
+                      ? "red"
+                      : "white",
+                }}
+              >
                 {row.cells.map((cell) => {
                   return (
                     <td key={cell.getCellProps().key}>{cell.render("Cell")}</td>
