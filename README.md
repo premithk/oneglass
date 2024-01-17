@@ -8,6 +8,8 @@
 2. **Backend Setup**:
     - Navigate to the `backend/oneglass` folder.
     - Run `yarn` to install dependencies.
+    - Add a `.env` file in `backend/oneglass` with the db connection string. Example - `DATABASE_URL="postgresql://username:password@host:5432/postgres?schema=oneglass"`
+
     - Run `yarn start:dev` to start the NestJS app.
 3. **Backend Setup**:
     - Navigate to the `frontend/oneglass` folder.
